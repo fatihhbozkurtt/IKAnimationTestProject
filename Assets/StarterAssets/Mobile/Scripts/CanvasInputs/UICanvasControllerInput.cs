@@ -1,12 +1,14 @@
+using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace StarterAssets
 {
-    public class UICanvasControllerInput : MonoBehaviour
+    public class UICanvasControllerInput : MonoSingleton<UICanvasControllerInput>
     {
+        #region Constant Implementations
 
-        [Header("Output")]
-        public StarterAssetsInputs starterAssetsInputs;
+        [Header("Output")] public StarterAssetsInputs starterAssetsInputs;
 
         public void VirtualMoveInput(Vector2 virtualMoveDirection)
         {
@@ -27,7 +29,17 @@ namespace StarterAssets
         {
             starterAssetsInputs.SprintInput(virtualSprintState);
         }
-        
-    }
 
+        #endregion
+
+        public event Action DriveButtonClickedEvent;
+
+        [Header("References")] [SerializeField]
+        private Button driveButton;
+
+        private void Start()
+        {
+            driveButton.onClick.AddListener((() => DriveButtonClickedEvent?.Invoke()));
+        }
+    }
 }

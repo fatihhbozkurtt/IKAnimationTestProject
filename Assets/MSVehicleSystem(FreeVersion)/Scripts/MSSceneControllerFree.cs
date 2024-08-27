@@ -126,10 +126,13 @@ public class MSSceneControllerFree : MonoBehaviour {
 	float MSbuttonVertical;
 
 	bool playerIsNull;
-
 	Vector2 vectorDirJoystick;
-
-	void Awake () {
+	
+	[Header("Customized Variables")]
+	public bool activate;
+	public MSVehicleControllerFree vehicle;
+	public MSFPSControllerFree fpsController;
+	void Awaker () {
 		error = false;
 		CheckEqualKeyCodes ();
 		MSSceneControllerFree[] sceneControllers = FindObjectsOfType(typeof(MSSceneControllerFree)) as MSSceneControllerFree[];
@@ -263,7 +266,19 @@ public class MSSceneControllerFree : MonoBehaviour {
 		}
 	}
 
-	void Update () {
+	void Update () 
+	{
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			activate = true;
+			
+			Awaker();
+			vehicle.Awaker();
+			fpsController.Starter();
+		}
+		
+		if(!activate) return;
+		
 		if (!error) {
 			#region customizeInputsValues
 			switch (selectControls) {
