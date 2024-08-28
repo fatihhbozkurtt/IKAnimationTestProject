@@ -41,6 +41,7 @@ namespace StarterAssets
         private Button driveButton;
 
         [SerializeField] private Button walkButton;
+        [SerializeField] private GameObject playerJoystickSystem;
 
         private void Start()
         {
@@ -64,6 +65,7 @@ namespace StarterAssets
         private void OnPlayerGotOutTheCar(Transform availableDoorTr)
         {
             walkButton.gameObject.SetActive(false);
+           
         }
 
         #endregion
@@ -73,6 +75,7 @@ namespace StarterAssets
         private void OnDriveButtonClicked()
         {
             DriveButtonClickedEvent?.Invoke();
+            playerJoystickSystem.SetActive(false);
             driveButton.gameObject.SetActive(false);
             walkButton.gameObject.SetActive(true);
         }
@@ -80,6 +83,7 @@ namespace StarterAssets
         private void OnWalkButtonClicked()
         {
             WalkButtonClickedEvent?.Invoke();
+            playerJoystickSystem.SetActive(true);
         }
 
         #endregion

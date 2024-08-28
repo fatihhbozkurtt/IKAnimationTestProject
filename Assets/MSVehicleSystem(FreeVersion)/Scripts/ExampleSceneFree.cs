@@ -40,7 +40,7 @@ public class ExampleSceneFree : MonoBehaviour {
 			return;
 		}
 		playerIsNull = false;
-		player = controls.player;
+		// player = controls.player;
 		if (!player) {
 			playerIsNull = true;
 		}
