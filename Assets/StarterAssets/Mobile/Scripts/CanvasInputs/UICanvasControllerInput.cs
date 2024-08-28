@@ -1,5 +1,6 @@
 using System;
 using Customized.Scripts;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,27 +39,36 @@ namespace StarterAssets
 
         [Header("References")] [SerializeField]
         private Button driveButton;
-        [SerializeField]
-        private Button walkButton;
+
+        [SerializeField] private Button walkButton;
 
         private void Start()
         {
             driveButton.onClick.AddListener(OnDriveButtonClicked);
             walkButton.onClick.AddListener(OnWalkButtonClicked);
-            
-            CarColliderHandler.instance.PlayerEnteredZoneEvent += OnPlayerEnteredZone;
-            CarColliderHandler.instance.PlayerExitedZoneEvent += OnPlayerExitedZone;
         }
 
-        private void OnPlayerExitedZone()
+        #region Action Events
+        
+        public void OnPlayerEnteredTriggerZone()
+        {
+            driveButton.gameObject.SetActive(true);
+        }
+        public void OnPlayerExitedTriggerZone()
         {
             driveButton.gameObject.SetActive(false);
         }
 
-        private void OnPlayerEnteredZone(bool hasAvailableDoor)
+        
+
+        private void OnPlayerGotOutTheCar(Transform availableDoorTr)
         {
-            driveButton.gameObject.SetActive(hasAvailableDoor);
+            walkButton.gameObject.SetActive(false);
         }
+
+        #endregion
+
+        #region Button Events
 
         private void OnDriveButtonClicked()
         {
@@ -66,11 +76,12 @@ namespace StarterAssets
             driveButton.gameObject.SetActive(false);
             walkButton.gameObject.SetActive(true);
         }
-        
+
         private void OnWalkButtonClicked()
         {
             WalkButtonClickedEvent?.Invoke();
-            walkButton.gameObject.SetActive(false);
         }
+
+        #endregion
     }
 }
