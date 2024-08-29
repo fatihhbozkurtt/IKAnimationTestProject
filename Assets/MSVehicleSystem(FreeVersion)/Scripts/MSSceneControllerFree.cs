@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
 using System;
+using Customized.Scripts;
 using StarterAssets;
 
 [Serializable]
@@ -331,9 +332,9 @@ public class MSSceneControllerFree : MonoBehaviour
 
     private void Start()
     {
-        UICanvasControllerInput.instance.DriveButtonClickedEvent +=
+        PlayerManager.instance.PerfomEnterindEndedEvent +=
             (() => canvasHolder.SetActive(true));
-        UICanvasControllerInput.instance.WalkButtonClickedEvent +=
+        PlayerManager.instance.PlayerSuccessfullyExitedCarEvent +=
             (() => canvasHolder.SetActive(false));
     }
 

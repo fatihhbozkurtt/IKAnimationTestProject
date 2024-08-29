@@ -654,7 +654,7 @@ public class MSVehicleControllerFree : MonoBehaviour
         //SetCameras ();
     }
 
- 
+
     void DebugStartErrors()
     {
         if (disableVehicle)
@@ -727,10 +727,10 @@ public class MSVehicleControllerFree : MonoBehaviour
         {
             enableSkidMarksOnStart = false;
         }
-        
-        UICanvasControllerInput.instance.DriveButtonClickedEvent +=
+
+        PlayerManager.instance.PerfomEnterindEndedEvent +=
             (() => camerasHolder.SetActive(true));
-        UICanvasControllerInput.instance.WalkButtonClickedEvent +=
+        PlayerManager.instance.PlayerSuccessfullyExitedCarEvent +=
             (() => camerasHolder.SetActive(false));
     }
 
@@ -1473,8 +1473,8 @@ public class MSVehicleControllerFree : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (!PlayerManager.instance.IsDrive) return;
-        
+        if (!PlayerManager.instance.isDrive) return;
+
         ApplyTorque();
         Brakes();
         if (isInsideTheCar)
@@ -1570,7 +1570,7 @@ public class MSVehicleControllerFree : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!PlayerManager.instance.IsDrive) return;
+        if (!PlayerManager.instance.isDrive) return;
         if (enableSkidMarksOnStart)
         {
             CheckGroundForSKidMarks();

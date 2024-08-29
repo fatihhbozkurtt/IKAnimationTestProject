@@ -59,13 +59,11 @@ namespace StarterAssets
         {
             driveButton.gameObject.SetActive(false);
         }
-
-        
-
-        private void OnPlayerGotOutTheCar(Transform availableDoorTr)
+      
+        public void OnPlayerGotOutTheCar()
         {
             walkButton.gameObject.SetActive(false);
-           
+            playerJoystickSystem.SetActive(true);
         }
 
         #endregion
@@ -75,15 +73,15 @@ namespace StarterAssets
         private void OnDriveButtonClicked()
         {
             DriveButtonClickedEvent?.Invoke();
-            playerJoystickSystem.SetActive(false);
-            driveButton.gameObject.SetActive(false);
+            
             walkButton.gameObject.SetActive(true);
+            driveButton.gameObject.SetActive(false);
+            playerJoystickSystem.SetActive(false);
         }
 
         private void OnWalkButtonClicked()
         {
             WalkButtonClickedEvent?.Invoke();
-            playerJoystickSystem.SetActive(true);
         }
 
         #endregion

@@ -1,31 +1,35 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using DitzelGames.FastIK;
 using StarterAssets;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-using Sequence = DG.Tweening.Sequence;
 
 namespace Customized.Scripts
 {
     public class PlayerManager : MonoSingleton<PlayerManager>
     {
-        public bool IsDrive = false;
-        public bool IsWalk = false;
+        public event Action PlayerSuccessfullyExitedCarEvent;
+        public event Action PerfomEnterindEndedEvent;
+        
+        [Header("Config")] public List<CarManager> CarList;
 
-        [Space(10)] public List<CarManager> CarList;
-        private CarManager CurrentActiveCar = null;
-        private bool IsThereCarInRange = false;
-
-        [Space(10)] public ThirdPersonController tpc;
+        [Space(10)] [Header("References")] public ThirdPersonController tpc;
         public CharacterController cc;
         public FastIKFabric LeftHandIK;
         public FastIKFabric RightHandIK;
+        public Animator animator;
 
-        [Header("Debug")] [SerializeField] private Animator animator;
-        private static readonly int EnterCar = Animator.StringToHash("EnterCar");
+        [Space(10)] [Header("Debug")] [HideInInspector]
+        public bool isDrive = false;
 
+        [HideInInspector] public bool isWalk;
+        private CarManager _currentActiveCar;
+        private bool _isThereCarInRange;
+        private static readonly int EnterCarLeftAnim = Animator.StringToHash("EnterCarLeft");
+        private static readonly int EnterCarRightAnim = Animator.StringToHash("EnterCarRight");
+        private static readonly int ExitCarAnim = Animator.StringToHash("ExitCar");
 
         protected override void Awake()
         {
@@ -35,47 +39,46 @@ namespace Customized.Scripts
 
         private void Start()
         {
-            IsWalk = true;
+            isWalk = true;
             UICanvasControllerInput.instance.DriveButtonClickedEvent += OnDriveButtonClicked;
             UICanvasControllerInput.instance.WalkButtonClickedEvent += OnWalkButtonClicked;
         }
 
         public void FixedUpdate()
         {
-            if (IsWalk)
-            {
-                ControlCarInRange();
-            }
+            if (!isWalk) return;
+
+            ControlCarInRange();
         }
 
-        public void ControlCarInRange()
+        private void ControlCarInRange()
         {
-            float ClosestCarDistance = 999f;
-            CurrentActiveCar = null;
+            float closestCarDistance = 999f;
+            _currentActiveCar = null;
 
             for (int i = 0; i < CarList.Count; i++)
             {
-                float CharacterCarDistance = Vector3.Distance(transform.position, CarList[i].transform.position);
-                if (CharacterCarDistance < ClosestCarDistance && CarList[i].WhichSide() != null)
+                float characterCarDistance = Vector3.Distance(transform.position, CarList[i].transform.position);
+                if (characterCarDistance < closestCarDistance && CarList[i].GetAvailableDoorData() != null)
                 {
-                    ClosestCarDistance = CharacterCarDistance;
-                    CurrentActiveCar = CarList[i];
+                    closestCarDistance = characterCarDistance;
+                    _currentActiveCar = CarList[i];
                 }
             }
 
-            if (IsThereCarInRange)
+            if (_isThereCarInRange)
             {
-                if (ClosestCarDistance >= 4f)
+                if (closestCarDistance >= 4f)
                 {
-                    IsThereCarInRange = false;
+                    _isThereCarInRange = false;
                     UICanvasControllerInput.instance.OnPlayerExitedTriggerZone();
                 }
             }
             else
             {
-                if (ClosestCarDistance < 4f)
+                if (closestCarDistance < 4f)
                 {
-                    IsThereCarInRange = true;
+                    _isThereCarInRange = true;
                     UICanvasControllerInput.instance.OnPlayerEnteredTriggerZone();
                 }
             }
@@ -83,44 +86,121 @@ namespace Customized.Scripts
 
         private void OnDriveButtonClicked()
         {
-            PerformEntering(CurrentActiveCar.WhichSide());
-            IsDrive = true;
-            IsWalk = false;
+            StartCoroutine(PerformEntering(_currentActiveCar.GetAvailableDoorData()));
+            isDrive = true;
+            isWalk = false;
         }
 
         private void OnWalkButtonClicked()
         {
-            PerformExit(CurrentActiveCar.WhichSide());
-            CurrentActiveCar = null;
-            IsDrive = false;
-            IsWalk = true;
+            if (_currentActiveCar.GetAvailableDoorData() == null) return;
+
+            Debug.LogWarning("Performing exit");
+            PlayerSuccessfullyExitedCarEvent?.Invoke();
+            UICanvasControllerInput.instance.OnPlayerGotOutTheCar();
+
+            LeftHandIK.enabled = false;
+            RightHandIK.enabled = false;
+
+            transform.SetParent(null);
+            _currentActiveCar.isUsingByPlayer = false;
+            isDrive = false;
+            isWalk = true;
+
+            transform.position = _currentActiveCar.GetAvailableDoorData().standOffset.position;
+
+            tpc.enabled = true;
+            cc.enabled = true;
+            _currentActiveCar = null;
+
+            animator.SetTrigger(ExitCarAnim);
         }
 
-        private void PerformEntering(DoorData doorData)
+        private IEnumerator PerformEntering(DoorData doorData)
         {
-            Vector3 EnterPosition = CurrentActiveCar.transform.position + doorData.standOffset;
             tpc.enabled = false;
             cc.enabled = false;
-            transform.position = EnterPosition;
-            transform.forward = doorData.doorMesh.transform.forward;
-            //tpc.enabled = true;
-            animator.SetTrigger(EnterCar);
 
-            GameObject HandIkTransform = new GameObject("HandTarget");
-            HandIkTransform.transform.SetParent(doorData.doorMesh.transform);
-            Transform HandTransform = HandIkTransform.transform;
-            HandTransform.position = LeftHandIK.transform.position;
+            Vector3 enterPosition = doorData.standOffset.position;
+            transform.position = enterPosition;
+            transform.forward = doorData.side == Side.Left
+                ? doorData.doorMesh.transform.forward
+                : -doorData.doorMesh.transform.forward;
+
+            GameObject handIK = new GameObject("HandTarget");
+            Transform handIKTransform = handIK.transform;
+            GameObject handIKLook = new GameObject("HandLook");
+            Transform handIKLookTransform = handIKLook.transform;
+            handIKTransform.transform.SetParent(doorData.doorMesh.transform);
+
+            FastIKFabric choosenFastIKFabric = null;
+            if (doorData.side == Side.Left)
+            {
+                choosenFastIKFabric = LeftHandIK;
+                animator.SetTrigger(EnterCarLeftAnim);
+            }
+
+            if (doorData.side == Side.Right)
+            {
+                choosenFastIKFabric = RightHandIK;
+                animator.SetTrigger(EnterCarRightAnim);
+            }
+
+
+            handIKTransform.position = choosenFastIKFabric.transform.position;
+            handIKLookTransform.position =
+                enterPosition + new Vector3(0, 2, 0)
+                              + (doorData.side == Side.Left
+                                  ? doorData.doorMesh.transform.right
+                                  : -doorData.doorMesh.transform.right) * 0.3f;
+            choosenFastIKFabric.enabled = true;
+            choosenFastIKFabric.Target = handIKTransform;
+            choosenFastIKFabric.Pole = handIKLookTransform;
+
+            yield return new WaitForSeconds(0.3f);
+            handIKTransform.DOMove(doorData.OutHandlePoint.position, 0.72f);
+            yield return new WaitForSeconds(0.72f);
+            doorData.doorMesh.transform.DOLocalRotate(new Vector3(0, doorData.DoorOpeningYRot, 0), 0.6f)
+                .SetEase(Ease.OutCubic);
+            yield return new WaitForSeconds(0.6f);
+            choosenFastIKFabric.enabled = false;
+            handIKTransform.SetParent(choosenFastIKFabric.transform);
+            handIKTransform.transform.localPosition = Vector3.zero;
+            yield return new WaitForSeconds(1.5f);
+            handIKTransform.SetParent(null);
+            choosenFastIKFabric.enabled = true;
+            handIKTransform.DOMove(doorData.InHandlePoint.position, 0.5f).SetEase(Ease.OutCubic);
+            yield return new WaitForSeconds(0.5f);
+            handIKTransform.SetParent(doorData.doorMesh);
+            doorData.doorMesh.transform.DOLocalRotate(new Vector3(0, 0, 0), 0.6f).SetEase(Ease.OutCubic);
+            yield return new WaitForSeconds(1.5f);
+            choosenFastIKFabric.enabled = false;
+
+
+            LeftHandIK.enabled = false;
+            RightHandIK.enabled = false;
+            Destroy(handIK);
+            Destroy(handIKLook);
+
+
+            #region Seat Swapping
+
+            if (doorData.side == Side.Right) transform.position = _currentActiveCar.RightSeatEnterPosTransform.position;
+
+            #endregion
+
+
+            LeftHandIK.Target = _currentActiveCar.CarSteerLeftHandTransform;
+            LeftHandIK.Pole = null;
+            RightHandIK.Target = _currentActiveCar.CarSteerRightHandTransform;
+            RightHandIK.Pole = null;
             LeftHandIK.enabled = true;
-            LeftHandIK.Target = HandTransform;
-            Sequence sq = DOTween.Sequence();
+            RightHandIK.enabled = true;
 
-            sq.Append(HandTransform.DOMove(doorData.OutHandlePoint.position, 1.02f));
-            sq.Append(doorData.doorMesh.transform.DOLocalRotate(new Vector3(0, doorData.DoorOpeningYRot, 0), 1f)
-                .OnComplete(() => { LeftHandIK.enabled = false; }));
-        }
-
-        private void PerformExit(DoorData doorData)
-        {
+            transform.SetParent(_currentActiveCar.transform);
+            _currentActiveCar.isUsingByPlayer = true;
+            
+            PerfomEnterindEndedEvent?.Invoke();
         }
     }
 }

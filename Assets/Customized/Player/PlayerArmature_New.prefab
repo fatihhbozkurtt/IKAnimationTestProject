@@ -41,6 +41,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 564370872516098832}
+  - component: {fileID: 1052804054987025456}
   m_Layer: 0
   m_Name: Left_MiddleProximal
   m_TagString: Untagged
@@ -64,6 +65,24 @@ Transform:
   - {fileID: 1332146764571097992}
   m_Father: {fileID: 3765270641306206673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1052804054987025456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428695962512811546}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03ca45bb53dc94f478358a1b6475653d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ChainLength: 3
+  Target: {fileID: 0}
+  Pole: {fileID: 0}
+  Iterations: 10
+  Delta: 0.001
+  SnapBackStrength: 1
 --- !u!1 &502505120111973922
 GameObject:
   m_ObjectHideFlags: 0
@@ -1678,7 +1697,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 40db3173a05ae3242b1c182a09b0a183, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_WarningMessage: 
@@ -1724,8 +1743,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26e54e5a728a9234ab24fcf1460ed8a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveSpeed: 20
-  SprintSpeed: 20
+  MoveSpeed: 3
+  SprintSpeed: 5
   RotationSmoothTime: 0.12
   SpeedChangeRate: 10
   LandingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
@@ -1909,6 +1928,8 @@ MonoBehaviour:
   - {fileID: 0}
   tpc: {fileID: 5484588556336828118}
   cc: {fileID: 4620289510324899271}
+  LeftHandIK: {fileID: 1052804054987025456}
+  RightHandIK: {fileID: 5064867686864214690}
   animator: {fileID: 0}
 --- !u!1 &6333044399431147658
 GameObject:
@@ -2560,6 +2581,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8721792464304684303}
+  - component: {fileID: 5064867686864214690}
   m_Layer: 0
   m_Name: Right_MiddleProximal
   m_TagString: Untagged
@@ -2583,6 +2605,24 @@ Transform:
   - {fileID: 7224070899586572535}
   m_Father: {fileID: 216542049083883914}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5064867686864214690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8659222184198399819}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03ca45bb53dc94f478358a1b6475653d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ChainLength: 3
+  Target: {fileID: 0}
+  Pole: {fileID: 0}
+  Iterations: 10
+  Delta: 0.001
+  SnapBackStrength: 1
 --- !u!1 &8691193976076550700
 GameObject:
   m_ObjectHideFlags: 0

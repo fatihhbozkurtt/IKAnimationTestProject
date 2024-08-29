@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using StarterAssets;
 using UnityEngine;
 
 namespace Customized.Scripts
@@ -8,41 +6,42 @@ namespace Customized.Scripts
     public class CarManager : MonoBehaviour
     {
         public List<DoorData> DoorDataList = new List<DoorData>();
-        
-        public event Action<CarManager,bool> PlayerEnteredTriggerZoneEvent;
-        public event Action <CarManager>PlayerExitedTriggerZoneEvent;
-        public event Action<Transform> PlayerGetOutOfCarEvent;
-        public event Action<Transform> PlayerGetInTheCarEvent;
+        public Transform CarSteerLeftHandTransform = null;
+        public Transform steer = null;
+        public Transform CarSteerRightHandTransform = null;
+        public Transform RightSeatEnterPosTransform = null;
+        public Transform wheelRefernce = null;
+        public bool isUsingByPlayer;
 
         [Space(10)] [Header("CHECK COLLIDER")] public float rayDistance;
-        public Vector3 _rayOffset;
 
-        public DoorData WhichSide()
+        public DoorData GetAvailableDoorData()
         {
-            for (int i = 0; i < DoorDataList.Count; i++)
+            foreach (var dt in DoorDataList)
             {
-                if (DoorDataList[i].side == Side.Left && CheckIfDoorAvailable(DoorDataList[i]))
+                if (dt.side == Side.Left && CheckIfDoorAvailable(dt))
                 {
-                    return DoorDataList[i];
+                    return dt;
                 }
             }
 
-            for (int i = 0; i < DoorDataList.Count; i++)
+            foreach (var dt in DoorDataList)
             {
-                if (CheckIfDoorAvailable(DoorDataList[i]))
+                if (CheckIfDoorAvailable(dt))
                 {
-                    return DoorDataList[i];
+                    return dt;
                 }
             }
 
+            Debug.LogError("No available door");
             return null;
         }
 
         private bool CheckIfDoorAvailable(DoorData DT)
         {
             Transform doorMeshTransform = DT.doorMesh.transform;
-            Vector3 rayOrigin = doorMeshTransform .position + doorMeshTransform .forward * -0.4f;
-            Vector3 dir = DT.side == Side.Left ? -doorMeshTransform .right : doorMeshTransform .right;
+            Vector3 rayOrigin = doorMeshTransform.position + doorMeshTransform.right * 0.4f;
+            Vector3 dir = DT.side == Side.Left ? -doorMeshTransform.forward : doorMeshTransform.forward;
             Ray ray = new Ray(rayOrigin, dir);
 
             Debug.DrawRay(rayOrigin, dir * rayDistance, Color.red, rayDistance);
@@ -58,6 +57,14 @@ namespace Customized.Scripts
 
             return true;
         }
+
+        private void FixedUpdate()
+        {
+            if (!isUsingByPlayer) return;
+
+            float wheelYRotation = wheelRefernce.transform.localEulerAngles.y - 90;
+            steer.localRotation = Quaternion.Euler(wheelYRotation, 0, 15);
+        }
     }
 
     [System.Serializable]
@@ -67,7 +74,7 @@ namespace Customized.Scripts
 
         public float DoorOpeningYRot = 0;
 
-        public Vector3 standOffset; // The transform where player should stand before opening the left door
+        public Transform standOffset; // The transform where player should stand before opening the left door
         public Transform doorMesh;
         public Transform OutHandlePoint;
         public Transform InHandlePoint;
